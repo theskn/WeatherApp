@@ -89,17 +89,63 @@ namespace WeatherApp
                     string jsonResponse = await response.Content.ReadAsStringAsync();
                     if (response.IsSuccessStatusCode)
                     {
+                        //Deserialize results into list
                         var allResults = JsonConvert.DeserializeObject<SearchRoot>(jsonResponse);
-                        int counter = 0;
+                        int counter = 1;
+
+                        Console.Clear();
+                        //Display the search results
                         foreach (SearchResult result in allResults.Results)
                         {
-                            Console.WriteLine("------------------------");
-                            Console.WriteLine("Possible Result:");
+                            //Console.WriteLine("------------------------");
+                            //Console.WriteLine("Possible Result:");
                             Console.WriteLine($"{counter}: {result.Name} in {result.Country}");
                             counter++;
                         }
-                        Console.WriteLine("------------------------");
+
+                        //Wait for user's choice with index
+                        /*Console.WriteLine("------------------------");
+                        Console.WriteLine("Select one of the following options: ");
+                        string userChoice = Console.ReadLine();
+                        var userSelection = allResults.Results[int.Parse(userChoice)-1];
+                        AddCityToFavorites(userSelection.Name, userSelection.Latitude.ToString(), userSelection.Longitude.ToString());
+                        */
+
+                        //User choice with the arrow keys
+                        var userSelection = false;
+                        int cursorPosition = 0;
+                        Console.SetCursorPosition(0, cursorPosition);
+                        while (!userSelection)
+                        {
+                            var key = Console.ReadKey(true);
+                            switch (key.Key)
+                            {
+                                //Move cursor up
+                                case ConsoleKey.UpArrow:
+                                    if (cursorPosition != 0)
+                                    {
+
+                                        cursorPosition -= 1;
+                                        Console.SetCursorPosition(0, cursorPosition);
+                                    }
+                                    break;
+                                case ConsoleKey.DownArrow:
+                                    if (cursorPosition < allResults.Results.Count - 1)
+                                    {
+                                        cursorPosition += 1;
+                                        Console.SetCursorPosition(0, cursorPosition);
+                                    }
+                                    break;
+                                case ConsoleKey.Enter:
+                                    Console.Clear();
+                                    AddCityToFavorites(allResults.Results[cursorPosition].Name, allResults.Results[cursorPosition].Latitude.ToString(), allResults.Results[cursorPosition].Longitude.ToString());
+                                    userSelection = true;
+                                    break;
+                            }
+                        }
                     }
+
+
                 }
                 catch (Exception ex)
                 {

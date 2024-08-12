@@ -40,7 +40,7 @@ do
                 Console.WriteLine("Search for a city:");
                 string city = Console.ReadLine();
                 await Utilities.SearchForCity(city);
-                string choice = Console.ReadLine();
+                
             }
             break;
         case "5":
