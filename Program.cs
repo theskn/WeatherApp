@@ -10,8 +10,9 @@ do
     Console.WriteLine("Weather Forecast App");
     Console.WriteLine("--------------------");
     Console.WriteLine("1. See Favorite cities");
-    Console.WriteLine("2. Add a city to Favorites");
-    Console.WriteLine("3. Remove a city from Favorites");
+    Console.WriteLine("2. Add a city to Favorites using coordinates");
+    Console.WriteLine("3. Add a city to Favorites using Search");
+    Console.WriteLine("5. Remove a city from Favorites");
     Console.WriteLine("9. Exit");
 
     Console.Write("Your selection: ");
@@ -23,21 +24,37 @@ do
             Utilities.DisplayFavoriteCities();
             break;
         case "2":
-            Console.Write("City name: ");
-            string city = Console.ReadLine();
-            Console.Write("City latitude: ");
-            string latitude = Console.ReadLine();
-            Console.Write("City longitude: ");
-            string longitude = Console.ReadLine();
+            {
+                Console.Write("City name: ");
+                string city = Console.ReadLine();
+                Console.Write("City latitude: ");
+                string latitude = Console.ReadLine();
+                Console.Write("City longitude: ");
+                string longitude = Console.ReadLine();
 
-            Utilities.AddCityToFavorites(city, latitude, longitude);
+                Utilities.AddCityToFavorites(city, latitude, longitude);
+            }
             break;
         case "3":
-            string input = Console.ReadLine();
-            Utilities.RemoveCityFromFavorites(input);
+            {
+                Console.WriteLine("Search for a city:");
+                string city = Console.ReadLine();
+                await Utilities.SearchForCity(city);
+                string choice = Console.ReadLine();
+            }
+            break;
+        case "5":
+            {
+                string city = Console.ReadLine();
+                Utilities.RemoveCityFromFavorites(city);
+            }
+            break;
+        case "9":
             break;
         default:
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Invalid selection. Please select one of the options above.");
+            Console.ResetColor();
             break;
     }
 }
@@ -61,10 +78,6 @@ async void RunApiCall()
                 var data = JsonConvert.DeserializeObject<WeatherData>(jsonResponse);
 
                 Console.WriteLine(data.Hourly.Temperature2m[0]);
-            }
-            else
-            {
-                Console.WriteLine("Errpr");
             }
         }
         catch (Exception ex)

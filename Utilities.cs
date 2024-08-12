@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Newtonsoft.Json;
 
 namespace WeatherApp
 {
@@ -16,7 +17,7 @@ namespace WeatherApp
 
         internal static void AddCityToFavorites(string city, string latitude, string longitude)
         {
-            string path = @"C:\Users\simon\Desktop\C#\WeatherApp\Cities.txt";
+            string path = @"Cities.txt";
             if (!File.Exists(path))
             {
                 Console.WriteLine("No saved cities found. Creating new Favorites list.");
@@ -29,19 +30,23 @@ namespace WeatherApp
             else
             {
                 File.AppendAllText(path, CityToString(city, latitude, longitude));
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"{city} added to Favorites.");
+                Console.ResetColor();
             }
         }
         internal static void DisplayFavoriteCities()
         {
-            string path = @"C:\Users\simon\Desktop\C#\WeatherApp\Cities.txt";
-            if (!File.Exists(path))
+            string path = @"Cities.txt";
+            string[] favoritesAsString = File.ReadAllLines(path);
+            if (!File.Exists(path) || favoritesAsString.Length == 0)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("No cities saved in Favorites.");
+                Console.ResetColor();
             }
             else
             {
-                string[] favoritesAsString = File.ReadAllLines(path);
 
                 for (int i = 0; i < favoritesAsString.Length; i++)
                 {
@@ -51,9 +56,11 @@ namespace WeatherApp
                     string longitude = strSplit[2];
 
                     Console.WriteLine("-----------");
+                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine(city);
                     Console.WriteLine(latitude);
                     Console.WriteLine(longitude);
+                    Console.ResetColor();
                     Console.WriteLine("-----------");
                 }
             }
@@ -61,12 +68,44 @@ namespace WeatherApp
 
         internal static void RemoveCityFromFavorites(string city)
         {
-            string path = @"C:\Users\simon\Desktop\C#\WeatherApp\Cities.txt";
+            string path = @"Cities.txt";
             List<string> favoritesAsList = new List<string>(File.ReadAllLines(path));
 
             favoritesAsList.RemoveAll(line => line.Contains(city));
             File.WriteAllLines(path, favoritesAsList);
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"{city} has been removed from your Favorites.");
+            Console.ResetColor();
+        }
+
+        internal static async Task SearchForCity(string name)
+        {
+            string apiURL = $"https://geocoding-api.open-meteo.com/v1/search?name={name}";
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(apiURL);
+                    string jsonResponse = await response.Content.ReadAsStringAsync();
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var allResults = JsonConvert.DeserializeObject<SearchRoot>(jsonResponse);
+                        int counter = 0;
+                        foreach (SearchResult result in allResults.Results)
+                        {
+                            Console.WriteLine("------------------------");
+                            Console.WriteLine("Possible Result:");
+                            Console.WriteLine($"{counter}: {result.Name} in {result.Country}");
+                            counter++;
+                        }
+                        Console.WriteLine("------------------------");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
         }
     }
 }
