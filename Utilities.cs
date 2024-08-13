@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
+using static WeatherApp.ForecastJSONMapping;
 
 namespace WeatherApp
 {
@@ -35,18 +36,27 @@ namespace WeatherApp
                 Console.ResetColor();
             }
         }
-        internal static void DisplayFavoriteCities()
+        internal static async Task DisplayFavoriteCities()
         {
             string path = @"Cities.txt";
-            string[] favoritesAsString = File.ReadAllLines(path);
-            if (!File.Exists(path) || favoritesAsString.Length == 0)
+            if (!File.Exists(path))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("No cities saved in Favorites.");
                 Console.ResetColor();
+                return;
             }
             else
             {
+                string[] favoritesAsString = File.ReadAllLines(path);
+
+                if (favoritesAsString.Length == 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("No cities saved in Favorites.");
+                    Console.ResetColor();
+                    return;
+                }
 
                 for (int i = 0; i < favoritesAsString.Length; i++)
                 {
@@ -54,12 +64,15 @@ namespace WeatherApp
                     string city = strSplit[0];
                     string latitude = strSplit[1];
                     string longitude = strSplit[2];
-
+                    string apiUrl = $"https://api.open-meteo.com/v1/forecast?{latitude.Replace(':', '=').ToLower()}&{longitude.Replace(':', '=').ToLower()}&hourly=temperature_2m&forecast_days=1";
                     Console.WriteLine("-----------");
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine(city);
                     Console.WriteLine(latitude);
                     Console.WriteLine(longitude);
+                    
+                    await RunApiCall(apiUrl);
+                    
                     Console.ResetColor();
                     Console.WriteLine("-----------");
                 }
@@ -97,19 +110,10 @@ namespace WeatherApp
                         //Display the search results
                         foreach (SearchResult result in allResults.Results)
                         {
-                            //Console.WriteLine("------------------------");
-                            //Console.WriteLine("Possible Result:");
-                            Console.WriteLine($"{counter}: {result.Name} in {result.Country}");
+                            Console.WriteLine($" {counter}: {result.Name} in {result.Country}");
                             counter++;
                         }
-
-                        //Wait for user's choice with index
-                        /*Console.WriteLine("------------------------");
-                        Console.WriteLine("Select one of the following options: ");
-                        string userChoice = Console.ReadLine();
-                        var userSelection = allResults.Results[int.Parse(userChoice)-1];
-                        AddCityToFavorites(userSelection.Name, userSelection.Latitude.ToString(), userSelection.Longitude.ToString());
-                        */
+                        Console.WriteLine(" Go back");
 
                         //User choice with the arrow keys
                         var userSelection = false;
@@ -124,13 +128,12 @@ namespace WeatherApp
                                 case ConsoleKey.UpArrow:
                                     if (cursorPosition != 0)
                                     {
-
                                         cursorPosition -= 1;
                                         Console.SetCursorPosition(0, cursorPosition);
                                     }
                                     break;
                                 case ConsoleKey.DownArrow:
-                                    if (cursorPosition < allResults.Results.Count - 1)
+                                    if (cursorPosition < allResults.Results.Count)
                                     {
                                         cursorPosition += 1;
                                         Console.SetCursorPosition(0, cursorPosition);
@@ -138,7 +141,10 @@ namespace WeatherApp
                                     break;
                                 case ConsoleKey.Enter:
                                     Console.Clear();
-                                    AddCityToFavorites(allResults.Results[cursorPosition].Name, allResults.Results[cursorPosition].Latitude.ToString(), allResults.Results[cursorPosition].Longitude.ToString());
+                                    if (cursorPosition != allResults.Results.Count)
+                                    {
+                                        AddCityToFavorites(allResults.Results[cursorPosition].Name, allResults.Results[cursorPosition].Latitude.ToString(), allResults.Results[cursorPosition].Longitude.ToString());
+                                    }
                                     userSelection = true;
                                     break;
                             }
@@ -146,6 +152,34 @@ namespace WeatherApp
                     }
 
 
+                }
+                catch (NullReferenceException nrex)
+                {
+                    Console.WriteLine("Oops, no city was found.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+
+        internal static async Task RunApiCall(string apiUrl)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(apiUrl);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string jsonResponse = await response.Content.ReadAsStringAsync();
+
+                        var data = JsonConvert.DeserializeObject<WeatherData>(jsonResponse);
+
+                        Console.WriteLine($"The temperature is :{data.Hourly.Temperature2m[0]}{'\u2103'}C");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -155,4 +189,5 @@ namespace WeatherApp
         }
     }
 }
+
 

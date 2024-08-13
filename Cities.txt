@@ -1,2 +1,3 @@
 City:Clio;Latitude:43.17753;Longitude:-83.73413
 City:Vahrn;Latitude:46.73901;Longitude:11.63749
+City:Värna;Latitude:58.31667;Longitude:15.91667

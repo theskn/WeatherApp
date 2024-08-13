@@ -3,7 +3,6 @@ using WeatherApp;
 using static WeatherApp.ForecastJSONMapping;
 
 string userSelection;
-string apiUrl;
 do
 {
     Console.WriteLine("--------------------");
@@ -21,7 +20,7 @@ do
     switch (userSelection)
     {
         case "1":
-            Utilities.DisplayFavoriteCities();
+            await Utilities.DisplayFavoriteCities();
             break;
         case "2":
             {
@@ -63,27 +62,27 @@ while (userSelection != "9");
 
 
 
-async void RunApiCall()
-{
-    using (HttpClient client = new HttpClient())
-    {
-        try
-        {
-            HttpResponseMessage response = await client.GetAsync(apiUrl);
+// async void RunApiCall()
+// {
+//     using (HttpClient client = new HttpClient())
+//     {
+//         try
+//         {
+//             HttpResponseMessage response = await client.GetAsync(apiUrl);
 
-            if (response.IsSuccessStatusCode)
-            {
-                string jsonResponse = await response.Content.ReadAsStringAsync();
+//             if (response.IsSuccessStatusCode)
+//             {
+//                 string jsonResponse = await response.Content.ReadAsStringAsync();
 
-                var data = JsonConvert.DeserializeObject<WeatherData>(jsonResponse);
+//                 var data = JsonConvert.DeserializeObject<WeatherData>(jsonResponse);
 
-                Console.WriteLine(data.Hourly.Temperature2m[0]);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-    }
+//                 Console.WriteLine(data.Hourly.Temperature2m[0]);
+//             }
+//         }
+//         catch (Exception ex)
+//         {
+//             Console.WriteLine(ex.Message);
+//         }
+//     }
 
-}
+// }
