@@ -3,7 +3,7 @@
 namespace WeatherApp
 {
 
-    class JsonConverter
+    class ForecastJSONMapping
     {
 
 

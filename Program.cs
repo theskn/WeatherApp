@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using WeatherApp;
-using static WeatherApp.JsonConverter;
+using static WeatherApp.ForecastJSONMapping;
 
 string userSelection;
 string apiUrl;
@@ -40,7 +40,7 @@ do
                 Console.WriteLine("Search for a city:");
                 string city = Console.ReadLine();
                 await Utilities.SearchForCity(city);
-                
+
             }
             break;
         case "5":
