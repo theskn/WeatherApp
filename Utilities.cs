@@ -1,5 +1,5 @@
-﻿using System.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using System.Text;
 using static WeatherApp.ForecastJSONMapping;
 
 namespace WeatherApp
@@ -18,7 +18,7 @@ namespace WeatherApp
 
         internal static void AddCityToFavorites(string city, string latitude, string longitude)
         {
-            string path = @"Cities.txt";
+            string path = @"C:\Users\simon\Desktop\C#\WeatherApp\Cities.txt";
             if (!File.Exists(path))
             {
                 Console.WriteLine("No saved cities found. Creating new Favorites list.");
@@ -34,11 +34,12 @@ namespace WeatherApp
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"{city} added to Favorites.");
                 Console.ResetColor();
+                ScreenManager.PressAnyKeyToContinue();
             }
         }
         internal static async Task DisplayFavoriteCities()
         {
-            string path = @"Cities.txt";
+            string path = @"C:\Users\simon\Desktop\C#\WeatherApp\Cities.txt";
             if (!File.Exists(path))
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -58,6 +59,7 @@ namespace WeatherApp
                     return;
                 }
 
+                ScreenManager.GenerateHeader();
                 for (int i = 0; i < favoritesAsString.Length; i++)
                 {
                     string[] strSplit = favoritesAsString[i].Split(";");
@@ -70,18 +72,19 @@ namespace WeatherApp
                     Console.WriteLine(city);
                     Console.WriteLine(latitude);
                     Console.WriteLine(longitude);
-                    
+
                     await RunApiCall(apiUrl);
-                    
+
                     Console.ResetColor();
                     Console.WriteLine("-----------");
                 }
+                ScreenManager.PressAnyKeyToContinue();
             }
         }
 
         internal static void RemoveCityFromFavorites(string city)
         {
-            string path = @"Cities.txt";
+            string path = @"C:\Users\simon\Desktop\C#\WeatherApp\Cities.txt";
             List<string> favoritesAsList = new List<string>(File.ReadAllLines(path));
 
             favoritesAsList.RemoveAll(line => line.Contains(city));
@@ -93,6 +96,7 @@ namespace WeatherApp
 
         internal static async Task SearchForCity(string name)
         {
+            string path = $@"C:\Users\simon\Desktop\C#\WeatherApp\Screens\TempScreen.txt";
             string apiURL = $"https://geocoding-api.open-meteo.com/v1/search?name={name}";
             using (HttpClient client = new HttpClient())
             {
@@ -105,50 +109,22 @@ namespace WeatherApp
                         //Deserialize results into list
                         var allResults = JsonConvert.DeserializeObject<SearchRoot>(jsonResponse);
                         int counter = 1;
+                        List<string> linesForScreen = new List<string>();
 
-                        Console.Clear();
+                        //clear file, leaving only the header
+                        File.WriteAllText(path, string.Empty);
+                        linesForScreen.Add(File.ReadAllText(@"C:\Users\simon\Desktop\C#\WeatherApp\Screens\Header.txt"));
                         //Display the search results
                         foreach (SearchResult result in allResults.Results)
                         {
-                            Console.WriteLine($" {counter}: {result.Name} in {result.Country}");
+                            linesForScreen.Add($" {counter}. {result.Name} in {result.Country}");
                             counter++;
                         }
-                        Console.WriteLine(" Go back");
-
-                        //User choice with the arrow keys
-                        var userSelection = false;
-                        int cursorPosition = 0;
-                        Console.SetCursorPosition(0, cursorPosition);
-                        while (!userSelection)
-                        {
-                            var key = Console.ReadKey(true);
-                            switch (key.Key)
-                            {
-                                //Move cursor up
-                                case ConsoleKey.UpArrow:
-                                    if (cursorPosition != 0)
-                                    {
-                                        cursorPosition -= 1;
-                                        Console.SetCursorPosition(0, cursorPosition);
-                                    }
-                                    break;
-                                case ConsoleKey.DownArrow:
-                                    if (cursorPosition < allResults.Results.Count)
-                                    {
-                                        cursorPosition += 1;
-                                        Console.SetCursorPosition(0, cursorPosition);
-                                    }
-                                    break;
-                                case ConsoleKey.Enter:
-                                    Console.Clear();
-                                    if (cursorPosition != allResults.Results.Count)
-                                    {
-                                        AddCityToFavorites(allResults.Results[cursorPosition].Name, allResults.Results[cursorPosition].Latitude.ToString(), allResults.Results[cursorPosition].Longitude.ToString());
-                                    }
-                                    userSelection = true;
-                                    break;
-                            }
-                        }
+                        //generate new results screen
+                        File.AppendAllLines(path, linesForScreen);
+                        File.AppendAllText(path, " 0. Exit");
+                        string selection = ScreenManager.DisplayScreen("TempScreen.txt");
+                        AddCityToFavorites(allResults.Results[int.Parse(selection)].Name, allResults.Results[int.Parse(selection)].Latitude.ToString(), allResults.Results[int.Parse(selection)].Longitude.ToString());
                     }
 
 
@@ -180,6 +156,14 @@ namespace WeatherApp
 
                         Console.WriteLine($"The temperature is :{data.Hourly.Temperature2m[0]}{'\u2103'}C");
                     }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    {
+                        Console.WriteLine("No such city found.");
+                    }
+                    else
+                    {
+                        Console.WriteLine(response.Content.ReadAsStringAsync());
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -187,6 +171,8 @@ namespace WeatherApp
                 }
             }
         }
+
+
     }
 }
 

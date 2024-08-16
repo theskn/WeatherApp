@@ -1,0 +1,8 @@
+﻿--------------------
+Weather Forecast App
+--------------------
+ 1. See Favorite cities
+ 2. Add a city to Favorites using coordinates
+ 3. Add a city to Favorites using Search
+ 5. Remove a city from Favorites
+ 0. Exit
